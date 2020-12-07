@@ -1,9 +1,9 @@
 package io.github.resilience4j.client;
 
-import java.util.Map;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @RestController
 public class CheckController {
@@ -16,8 +16,8 @@ public class CheckController {
 
 
     @GetMapping("/check")
-    public Map<String, Number> check() {
-        return checkService.check();
+    public Map<String, Object> check() {
+        return checkService.tryTest();
     }
 
 }

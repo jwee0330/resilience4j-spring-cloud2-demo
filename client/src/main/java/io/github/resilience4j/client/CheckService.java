@@ -1,15 +1,17 @@
 package io.github.resilience4j.client;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.stereotype.Service;
-
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.retry.RetryRegistry;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class CheckService {
@@ -40,5 +42,30 @@ public class CheckService {
 		result.put("ThreadPoolBulkhead max thread pool", threadPoolBulkheadRegistry.getDefaultConfig().getMaxThreadPoolSize());
 		result.put("Retry max retry", retryRegistry.getDefaultConfig().getMaxAttempts());
 		return result;
+	}
+
+	public Map<String, Object> tryTest() {
+		Map<String, Object> results = new HashMap<>();
+		results.put("result", retryRegistry.retry("default")
+				.executeSupplier(this::threetimes));
+		return results;
+	}
+
+
+	int retryCount = 1;
+
+	public String threetimes() {
+		if (retryCount <= 4) {
+			try {
+				TimeUnit.SECONDS.sleep(2);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			System.out.println("재시도 회수: " + retryCount);
+			retryCount++;
+			throw new HttpServerErrorException(HttpStatus.BAD_REQUEST);
+		}
+		System.out.println("재시도 회수: " + retryCount);
+		return "성공";
 	}
 }
